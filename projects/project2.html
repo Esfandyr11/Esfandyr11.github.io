@@ -80,24 +80,36 @@
     <div class="content">
         <h1>Lightning RAG Project</h1>
         <h2>Esfandyr</h2>
+        
         <div class="box">
             <h3>Setting Up a Localized Easy OCR with Ray Cluster</h3>
             <p>In the Lightning RAG project, the initial step involves setting up a localized Easy OCR system utilizing a Ray cluster. The process begins by configuring Ray Serve, a scalable model serving library built on Ray, enabling the deployment of machine learning models at scale with minimal code.</p>
             <p>Ray Serve operates by creating a serve handle, which can route HTTP requests to the appropriate model. This is accomplished by initializing Ray and Ray Serve, then defining and deploying a model. The model class must be decorated with <code>@serve.deployment</code> and include the inference logic.</p>
-            
+            <p>Incorporating real-time OCR involves continuously processing images as they are captured, which is crucial for applications like video processing, live document scanning, and automated data entry. This requires efficient handling of image streams and leveraging GPU acceleration for real-time performance. The EasyOCR library supports both CPU and GPU processing, making it suitable for real-time OCR tasks. Additionally, using Ray's parallel processing capabilities allows the workload to be distributed across multiple cores or nodes, further enhancing the real-time performance.</p>
+        </div>
+        
+        <div class="box">
             <h3>Utilizing Multithreading with Ray to Accelerate Text Extraction</h3>
             <p>To accelerate text extraction, we leverage Ray's parallel processing capabilities. By distributing the OCR workload across multiple CPU cores, we can significantly enhance performance. This involves initializing Ray, creating multiple actor instances of an OCR worker class, and distributing the text extraction tasks among these actors. Each OCR worker uses the EasyOCR library to process images in parallel, thus speeding up the overall text extraction process.</p>
-            
+        </div>
+        
+        <div class="box">
             <h3>Setting Up Embedding Logic on Another Node in the Ray Cluster</h3>
             <p>The embedding logic is implemented using nomic-1.5v, fast embed, and Qdrant vector DB. First, we set up the embedding model with nomic-1.5v, a powerful embedding library. The model is initialized and used to embed texts, transforming them into high-dimensional vectors. Fast embed is integrated to ensure efficient text embeddings, providing a streamlined approach to generate embeddings for large text datasets.</p>
-            
+        </div>
+        
+        <div class="box">
             <h3>Creating a Customized Indexing Layer</h3>
             <p>To manage and query the high-dimensional embeddings, we implement a customized indexing layer using a hybrid approach that combines HNSW-FINGER and sparse hybrid base index with IVPFQ. HNSW-FINGER utilizes hierarchical navigable small world graphs for efficient similarity search, while IVPFQ employs inverted file and product quantization techniques. These methods enhance the indexing and retrieval performance, allowing for fast and accurate nearest neighbor searches.</p>
-            
+        </div>
+        
+        <div class="box">
             <h3>Retrieval Mechanism</h3>
             <p>The retrieval mechanism involves utilizing Qdrant and ChatWindowSummaryBuffer for efficient vector search and continuous chat summarization. Qdrant, a high-performance vector database, is employed to store and query the embeddings. The search operation involves querying the database with an embedding vector and retrieving the most similar vectors based on a specified distance metric.</p>
             <p>ChatWindowSummaryBuffer is used to manage long-term conversation memory, enabling continuous summarization of chat windows. This component helps in maintaining context and generating concise summaries of ongoing conversations, enhancing the user experience.</p>
-            
+        </div>
+        
+        <div class="box">
             <h3>AWS Cluster for File Ingestion and Embedding</h3>
             <p>For large-scale file ingestion and embedding, we set up an AWS cluster. The cluster is configured to ingest 1000 files within 1 minute and embed them within 3-4 minutes. This involves deploying a Ray cluster on AWS, specifying the number of worker nodes, and initializing Ray Serve on the cluster. The custom GROQ LLM server is integrated to handle the language model computations, ensuring efficient processing of large volumes of text data.</p>
         </div>

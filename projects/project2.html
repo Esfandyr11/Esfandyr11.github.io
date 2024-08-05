@@ -107,8 +107,7 @@
     <p>Setting up this architecture within the Ray cluster involves distributing the training and inference tasks across multiple nodes. Each node in the cluster is responsible for processing a subset of the data, and the results are aggregated to obtain the final output. This distributed approach ensures that the OCR system can handle large-scale text recognition tasks efficiently.</p>
 
     <p>For example, when processing a document with multiple pages, each page can be assigned to a different node in the Ray cluster. The nodes process the pages concurrently, extracting text from each page in parallel. Once all pages are processed, the extracted text is combined to form the final output.</p>
-
-    <img src="https://wandb.ai/authors/text-recognition-crnn-ctc/reports/Text-Recognition-With-CRNN-CTC-Network--VmlldzoxNTI5NDI/images/30.png" alt="CRNN Training Process" style="max-width: 100%; border-radius: 8px;">
+    <img src="https://api.wandb.ai/files/authors/images/projects/82562/a2017bee.png" alt="CRNN Training Process" style="max-width: 100%; border-radius: 8px;">
 
     <p>This setup not only improves the speed of text extraction but also ensures that the system can scale to handle large volumes of data. By leveraging the distributed computing capabilities of Ray, we can build a robust and scalable OCR system that meets the demands of real-time text recognition applications.</p>
 

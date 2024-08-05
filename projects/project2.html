@@ -461,10 +461,225 @@ for hit in response['result']:
         </div>
 
         
-        <div class="box">
-            <h3>Creating a Customized Indexing Layer</h3>
-            <p>To manage and query the high-dimensional embeddings, we implement a customized indexing layer using a hybrid approach that combines HNSW-FINGER and sparse hybrid base index with IVPFQ. HNSW-FINGER utilizes hierarchical navigable small world graphs for efficient similarity search, while IVPFQ employs inverted file and product quantization techniques. These methods enhance the indexing and retrieval performance, allowing for fast and accurate nearest neighbor searches.</p>
+               <div class="box">
+            <h1>Creating a customized indexing and Quantization Layer with HNSW-FINGER and IVPFQ</h1>
+            
+            <h2>Hierarchical Navigable Small World (HNSW)</h2>
+            <p>Hierarchical Navigable Small World (HNSW) is a state-of-the-art algorithm for approximate nearest neighbor search. It constructs a hierarchical graph where each layer is a proximity graph (small world) of the dataset. The hierarchical structure allows efficient navigation through the data points.</p>
+            
+            <p>The HNSW algorithm builds a multi-layer graph where the top layer contains a small subset of nodes and each lower layer has more nodes, finally including all data points at the bottom layer. Searching for nearest neighbors involves starting at the top layer and navigating down to the bottom layer, using the connections in each layer to quickly find close neighbors.</p>
+            
+            <p>The core idea of HNSW can be mathematically represented as:</p>
+            
+            <p>Let \( \mathcal{G} = (V, E) \) be a graph where \( V \) is the set of vertices (data points) and \( E \) is the set of edges (connections between points).</p>
+            
+            <p>At each layer \( l \) in the hierarchy, the graph \( \mathcal{G}_l = (V_l, E_l) \) is constructed such that:</p>
+            
+            <p>\[
+            V_0 \subseteq V_1 \subseteq \cdots \subseteq V_L = V
+            \]</p>
+            
+            <p>where \( L \) is the number of layers. The search algorithm starts at the top layer and moves down to the bottom layer:</p>
+            
+            <p>\[
+            \text{Search}(q) = \text{Navigate}(\mathcal{G}_0, q) \rightarrow \text{Navigate}(\mathcal{G}_1, q) \rightarrow \cdots \rightarrow \text{Navigate}(\mathcal{G}_L, q)
+            \]</p>
+            
+            <pre><code>import hnswlib
+        
+        # Initializing the HNSW index
+        dim = 128  # Dimensionality of the embeddings
+        num_elements = 10000  # Number of elements (data points)
+        
+        p = hnswlib.Index(space='l2', dim=dim)  # 'l2' refers to Euclidean distance
+        p.init_index(max_elements=num_elements, ef_construction=200, M=16)
+        
+        # Generating random data points
+        data = np.random.rand(num_elements, dim).astype(np.float32)
+        
+        # Adding data points to the index
+        p.add_items(data)
+        
+        # Querying the index
+        query_data = np.random.rand(1, dim).astype(np.float32)
+        labels, distances = p.knn_query(query_data, k=5)  # Finding 5 nearest neighbors
+        
+        print("Nearest neighbors:", labels)
+        print("Distances:", distances)</code></pre>
+            
+            <p>In this code snippet, we initialize an HNSW index using the `hnswlib` library, add random data points to the index, and query the index to find the nearest neighbors of a given query point.</p>
+            
+            <h2>Inverted File System with Product Quantization (IVF-PQ)</h2>
+            <p>The Inverted File System with Product Quantization (IVF-PQ) is a technique for compressing high-dimensional vectors to reduce storage requirements and speed up similarity search. It divides the vector space into a number of subspaces and applies quantization within each subspace.</p>
+            
+            <p>Product Quantization (PQ) works by splitting the original vector into smaller sub-vectors and quantizing each sub-vector independently. This allows for efficient storage and computation of distances between compressed vectors.</p>
+            
+            <p>Mathematically, PQ can be described as follows:</p>
+            
+            <p>Given a vector \( \mathbf{x} \in \mathbb{R}^d \), we split it into \( m \) sub-vectors:</p>
+            
+            <p>\[
+            \mathbf{x} = [\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_m]
+            \]</p>
+            
+            <p>Each sub-vector \( \mathbf{x}_i \) is quantized independently using a codebook \( \mathcal{C}_i \):</p>
+            
+            <p>\[
+            \mathbf{q}_i = \text{argmin}_{\mathbf{c} \in \mathcal{C}_i} \| \mathbf{x}_i - \mathbf{c} \|
+            \]</p>
+            
+            <p>The compressed vector \( \mathbf{q} \) is the concatenation of the quantized sub-vectors:</p>
+            
+            <p>\[
+            \mathbf{q} = [\mathbf{q}_1, \mathbf{q}_2, \ldots, \mathbf{q}_m]
+            \]</p>
+            
+            <pre><code>from faiss import IndexIVFPQ, IndexFlatL2
+        
+        # Parameters for IVF-PQ
+        nlist = 100  # Number of clusters
+        m = 8  # Number of sub-quantizers
+        nbits = 8  # Number of bits per sub-vector
+        
+        # Initialize the IVF-PQ index
+        quantizer = IndexFlatL2(dim)  # Quantizer for clustering
+        index = IndexIVFPQ(quantizer, dim, nlist, m, nbits)
+        
+        # Training the index
+        index.train(data)
+        
+        # Adding data points to the index
+        index.add(data)
+        
+        # Querying the index
+        D, I = index.search(query_data, k=5)  # Finding 5 nearest neighbors
+        
+        print("Nearest neighbors:", I)
+        print("Distances:", D)</code></pre>
+            
+            <p>In this code snippet, we initialize an IVF-PQ index using the `faiss` library, train the index on the data points, and query the index to find the nearest neighbors of a given query point.</p>
+            
+            <h2>Product Quantization (PQ)</h2>
+            <p>Product Quantization is a technique used to compress high-dimensional vectors by splitting them into smaller sub-vectors and quantizing each sub-vector independently. This results in a compact representation of the original vectors, enabling efficient storage and fast similarity search.</p>
+            
+            <p>PQ divides the original vector space into subspaces and applies vector quantization within each subspace. The quantized sub-vectors are then combined to form the final compressed vector. The distance between two compressed vectors is computed as the sum of the distances between their corresponding sub-vectors.</p>
+            
+            <p>Mathematically, the distance between two vectors \( \mathbf{x} \) and \( \mathbf{y} \) can be approximated as:</p>
+            
+            <p>\[
+            \| \mathbf{x} - \mathbf{y} \|^2 \approx \sum_{i=1}^{m} \| \mathbf{x}_i - \mathbf{y}_i \|^2
+            \]</p>
+            
+            <pre><code>from faiss import IndexPQ
+        
+        # Parameters for PQ
+        m = 8  # Number of sub-quantizers
+        nbits = 8  # Number of bits per sub-vector
+        
+        # Initialize the PQ index
+        pq_index = IndexPQ(dim, m, nbits)
+        
+        # Training the index
+        pq_index.train(data)
+        
+        # Adding data points to the index
+        pq_index.add(data)
+        
+        # Querying the index
+        D, I = pq_index.search(query_data, k=5)  # Finding 5 nearest neighbors
+        
+        print("Nearest neighbors:", I)
+        print("Distances:", D)</code></pre>
+            
+            <p>In this code snippet, we initialize a PQ index using the `faiss` library, train the index on the data points, and query the index to find the nearest neighbors of a given query point.</p>
+            
+            <h2>HNSW-FINGER</h2>
+            <p>HNSW-FINGER is an enhanced version of HNSW that incorporates fast inference techniques for graph-based approximate nearest neighbor search. It uses additional optimizations such as caching and pruning to further speed up the search process.</p>
+            
+            <p>The HNSW-FINGER algorithm builds on the HNSW approach by introducing a fingerprinting mechanism that caches intermediate results during the search process. This allows for faster inference by reusing previously computed distances and avoiding redundant computations.</p>
+            
+            <p>Let \( f(q, p) \) represent the fingerprint of the query \( q \) and point \( p \). The fingerprinting mechanism can be described as:</p>
+            
+            <p>\[
+            f(q, p) = \begin{cases}
+            d(q, p) & \text{if } d(q, p) \text{ is computed for the first time} \\
+            \text{cached value} & \text{otherwise}
+            \end{cases}
+            \]</p>
+            
+            <pre><code># Assuming hnswlib is already imported and data is available
+        
+        # Initializing the HNSW-FINGER index (hypothetical example)
+        class HNSWFinger(hnswlib.Index):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.cache = {}
+        
+            def knn_query(self, *args, **kwargs):
+                # Implementing the caching mechanism
+                if args in self.cache:
+                    return self.cache[args]
+                result = super().knn_query(*args, **kwargs)
+                self.cache[args] = result
+                return result
+        
+        # Create an instance of HNSW-FINGER
+        hnsw_finger = HNSWFinger(space='l2', dim=dim)
+        hnsw_finger.init_index(max_elements=num_elements, ef_construction=200, M=16)
+        hnsw_finger.add_items(data)
+        
+        # Querying the index
+        labels, distances = hnsw_finger.knn_query(query_data, k=5)
+        
+        print("Nearest neighbors:", labels)
+        print("Distances:", distances)</code></pre>
+            
+            <p>In this hypothetical example, we extend the HNSW class to implement the HNSW-FINGER algorithm with caching. The `knn_query` method is overridden to include a caching mechanism that stores and retrieves previously computed results.</p>
+            
+            <h2>Combining HNSW-FINGER with IVF-PQ and Product Quantization</h2>
+            <p>By combining the strengths of HNSW-FINGER, IVF-PQ, and Product Quantization, we can achieve even faster and more efficient similarity search. HNSW-FINGER provides a robust hierarchical graph-based approach for navigating the data points, while IVF-PQ and Product Quantization offer efficient storage and computation of distances between compressed vectors.</p>
+            
+            <p>Let's consider the combination mathematically. Given two vectors \( \mathbf{x} \) and \( \mathbf{y} \), the distance computation can be broken down as:</p>
+            
+            <p>1. **Hierarchical Search with HNSW-FINGER:**</p>
+            
+            <p>\[
+            \text{Search}(q) = \sum_{l=0}^{L} \text{Navigate}(\mathcal{G}_l, q)
+            \]</p>
+            
+            <p>2. **Quantization with IVF-PQ and PQ:**</p>
+            
+            <p>\[
+            \| \mathbf{x} - \mathbf{y} \|^2 \approx \sum_{i=1}^{m} \| \mathbf{x}_i - \mathbf{y}_i \|^2
+            \]</p>
+            
+            <pre><code>from faiss import IndexIVFPQ
+        import hnswlib
+        
+        # Initialize the HNSW-FINGER index
+        hnsw_finger = HNSWFinger(space='l2', dim=dim)
+        hnsw_finger.init_index(max_elements=num_elements, ef_construction=200, M=16)
+        hnsw_finger.add_items(data)
+        
+        # Initialize the IVF-PQ index
+        quantizer = hnsw_finger  # Using HNSW-FINGER as the quantizer
+        ivfpq_index = IndexIVFPQ(quantizer, dim, nlist, m, nbits)
+        
+        # Training the IVF-PQ index
+        ivfpq_index.train(data)
+        
+        # Adding data points to the IVF-PQ index
+        ivfpq_index.add(data)
+        
+        # Querying the index
+        D, I = ivfpq_index.search(query_data, k=5)  # Finding 5 nearest neighbors
+        
+        print("Nearest neighbors:", I)
+        print("Distances:", D)</code></pre>
+            
+            <p>In this code snippet, we initialize an HNSW-FINGER index and use it as the quantizer for an IVF-PQ index. We then train the IVF-PQ index on the data points and query the index to find the nearest neighbors of a given query point. This combination leverages the fast inference capabilities of HNSW-FINGER and the efficient storage and retrieval of IVF-PQ, resulting in a highly optimized similarity search pipeline.</p>
         </div>
+
         
         <div class="box">
             <h3>Retrieval Mechanism</h3>

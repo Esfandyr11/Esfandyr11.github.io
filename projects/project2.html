@@ -81,145 +81,25 @@
         <h1>Lightning RAG Project</h1>
         <h2>Esfandyr</h2>
         <div class="box">
-            <h3>1. Setting Up a Localized Easy OCR with Ray Cluster</h3>
-            <p>The Lightning RAG project starts with setting up a localized Easy OCR system using a Ray cluster. This involves:</p>
+            <h3>Setting Up a Localized Easy OCR with Ray Cluster</h3>
+            <p>In the Lightning RAG project, the initial step involves setting up a localized Easy OCR system utilizing a Ray cluster. The process begins by configuring Ray Serve, a scalable model serving library built on Ray, enabling the deployment of machine learning models at scale with minimal code.</p>
+            <p>Ray Serve operates by creating a serve handle, which can route HTTP requests to the appropriate model. This is accomplished by initializing Ray and Ray Serve, then defining and deploying a model. The model class must be decorated with <code>@serve.deployment</code> and include the inference logic.</p>
             
-            <h4>1.1 Setting Up Ray Serve</h4>
-            <p>Ray Serve is a scalable model serving library built on Ray. It enables the deployment of machine learning models at scale with minimal code. Here are the steps to set up Ray Serve:</p>
-            <ol>
-                <li>Install Ray and Ray Serve:
-                    <p class="equation">pip install ray[serve]</p>
-                </li>
-                <li>Initialize Ray and Ray Serve:
-                    <pre><code>import ray
-from ray import serve
-
-ray.init()
-serve.start()</code></pre>
-                </li>
-                <li>Define and deploy a model:
-                    <pre><code>@serve.deployment
-class OCRModel:
-    def __call__(self, image: np.ndarray):
-        # Your OCR logic here
-        pass
-
-OCRModel.deploy()</code></pre>
-                </li>
-            </ol>
-
-            <h4>1.2 Utilizing Multithreading with Ray to Accelerate Text Extraction</h4>
-            <p>Ray's parallel processing capabilities can significantly speed up text extraction. By leveraging Ray's actors and tasks, we can distribute the OCR workload across multiple CPU cores:</p>
-            <pre><code>import ray
-from easyocr import Reader
-
-ray.init()
-
-@ray.remote
-class OCRWorker:
-    def __init__(self):
-        self.reader = Reader(['en'])
-
-    def extract_text(self, image_path):
-        return self.reader.readtext(image_path)
-
-workers = [OCRWorker.remote() for _ in range(ray.cluster_resources()['CPU'])]
-
-# Distribute tasks
-futures = [worker.extract_text.remote(image_path) for worker in workers]
-results = ray.get(futures)</code></pre>
-
-            <h3>2. Setting Up Embedding Logic on Another Node in the Ray Cluster</h3>
-            <p>The next step is to set up embedding logic using nomic-1.5v, fast embed, and Qdrant vector DB:</p>
+            <h3>Utilizing Multithreading with Ray to Accelerate Text Extraction</h3>
+            <p>To accelerate text extraction, we leverage Ray's parallel processing capabilities. By distributing the OCR workload across multiple CPU cores, we can significantly enhance performance. This involves initializing Ray, creating multiple actor instances of an OCR worker class, and distributing the text extraction tasks among these actors. Each OCR worker uses the EasyOCR library to process images in parallel, thus speeding up the overall text extraction process.</p>
             
-            <h4>2.1 Embedding with nomic-1.5v</h4>
-            <p>To set up the embedding logic, install nomic and set up the embedding model:</p>
-            <p class="equation">pip install nomic</p>
-            <pre><code>from nomic import Embedding
-
-embedding_model = Embedding(model='nomic-1.5v')
-embeddings = embedding_model.embed(texts)</code></pre>
-
-            <h4>2.2 Fast Embed Integration</h4>
-            <p>Integrate fast embed for efficient text embeddings:</p>
-            <p class="equation">pip install fast-embed</p>
-            <pre><code>from fast_embed import FastEmbed
-
-embedder = FastEmbed()
-embeddings = embedder.embed(texts)</code></pre>
-
-            <h4>2.3 Setting Up Qdrant Vector DB</h4>
-            <p>Qdrant is a high-performance vector database for storing and querying embeddings:</p>
-            <p class="equation">pip install qdrant-client</p>
-            <pre><code>from qdrant_client import QdrantClient
-
-client = QdrantClient("http://localhost:6333")
-client.upload_collection(
-    collection_name="text_embeddings",
-    vectors=embeddings
-)</code></pre>
-
-            <h3>3. Creating a Customized Indexing Layer</h3>
-            <p>The indexing layer uses a hybrid approach combining HNSW-FINGER and sparse hybrid base index with IVPFQ:</p>
+            <h3>Setting Up Embedding Logic on Another Node in the Ray Cluster</h3>
+            <p>The embedding logic is implemented using nomic-1.5v, fast embed, and Qdrant vector DB. First, we set up the embedding model with nomic-1.5v, a powerful embedding library. The model is initialized and used to embed texts, transforming them into high-dimensional vectors. Fast embed is integrated to ensure efficient text embeddings, providing a streamlined approach to generate embeddings for large text datasets.</p>
             
-            <h4>3.1 HNSW-FINGER and IVPFQ Indexing</h4>
-            <p>HNSW-FINGER and IVPFQ combine hierarchical navigable small world graphs with inverted file and product quantization for efficient similarity search:</p>
-            <pre><code># HNSW-FINGER setup
-import hnswlib
-
-index = hnswlib.Index(space='l2', dim=embeddings.shape[1])
-index.init_index(max_elements=len(embeddings), ef_construction=200, M=16)
-index.add_items(embeddings)
-
-# IVPFQ setup
-from faiss import IndexIVFPQ, index_factory
-
-quantizer = index_factory(embeddings.shape[1], "IVF100,PQ10", faiss.METRIC_L2)
-quantizer.train(embeddings)
-quantizer.add(embeddings)</code></pre>
-
-            <h3>4. Retrieval Mechanism</h3>
-            <p>Setting up a retrieval mechanism involves using Qdrant and ChatWindowSummaryBuffer for continuous chat summarization:</p>
+            <h3>Creating a Customized Indexing Layer</h3>
+            <p>To manage and query the high-dimensional embeddings, we implement a customized indexing layer using a hybrid approach that combines HNSW-FINGER and sparse hybrid base index with IVPFQ. HNSW-FINGER utilizes hierarchical navigable small world graphs for efficient similarity search, while IVPFQ employs inverted file and product quantization techniques. These methods enhance the indexing and retrieval performance, allowing for fast and accurate nearest neighbor searches.</p>
             
-            <h4>4.1 Qdrant Retrieval</h4>
-            <p>Utilize Qdrant for vector search:</p>
-            <pre><code>results = client.search(
-    collection_name="text_embeddings",
-    query_vector=query_embedding,
-    top=10
-)</code></pre>
-
-            <h4>4.2 ChatWindowSummaryBuffer</h4>
-            <p>ChatWindowSummaryBuffer helps in managing long-term conversation memory:</p>
-            <pre><code>from chat_window_summary_buffer import ChatWindowSummaryBuffer
-
-summary_buffer = ChatWindowSummaryBuffer()
-summary_buffer.add_message(user_id, message)
-summary = summary_buffer.get_summary(user_id)</code></pre>
-
-            <h3>5. AWS Cluster for File Ingestion and Embedding</h3>
-            <p>Setting up an AWS cluster to ingest 1000 files within 1 minute and embed them in 3-4 minutes:</p>
+            <h3>Retrieval Mechanism</h3>
+            <p>The retrieval mechanism involves utilizing Qdrant and ChatWindowSummaryBuffer for efficient vector search and continuous chat summarization. Qdrant, a high-performance vector database, is employed to store and query the embeddings. The search operation involves querying the database with an embedding vector and retrieving the most similar vectors based on a specified distance metric.</p>
+            <p>ChatWindowSummaryBuffer is used to manage long-term conversation memory, enabling continuous summarization of chat windows. This component helps in maintaining context and generating concise summaries of ongoing conversations, enhancing the user experience.</p>
             
-            <h4>5.1 AWS Cluster Setup</h4>
-            <p>Deploy a Ray cluster on AWS:</p>
-            <pre><code># ray-cluster.yaml
-cluster_name: lightning-rag
-min_workers: 5
-max_workers: 10
-initial_workers: 5
-autoscaling_mode: default
-worker_type:
-  instance_type: m5.large
-  image_id: latest_ray</code></pre>
-
-            <h4>5.2 Ray Serve for AWS</h4>
-            <p>Use Ray Serve to manage and deploy the models:</p>
-            <pre><code># Deploy Ray Serve on AWS
-ray up ray-cluster.yaml
-ray exec ray-cluster.yaml "serve start"</code></pre>
-
-            <h4>5.3 Integration with Custom GROQ LLM Server</h4>
-            <p>Integrate with a custom</p>
+            <h3>AWS Cluster for File Ingestion and Embedding</h3>
+            <p>For large-scale file ingestion and embedding, we set up an AWS cluster. The cluster is configured to ingest 1000 files within 1 minute and embed them within 3-4 minutes. This involves deploying a Ray cluster on AWS, specifying the number of worker nodes, and initializing Ray Serve on the cluster. The custom GROQ LLM server is integrated to handle the language model computations, ensuring efficient processing of large volumes of text data.</p>
         </div>
     </div>
 </body>

@@ -254,9 +254,72 @@
 
         
         <div class="box">
-            <h3>Utilizing Multithreading with Ray to Accelerate Text Extraction</h3>
-            <p>To accelerate text extraction, we leverage Ray's parallel processing capabilities. By distributing the OCR workload across multiple CPU cores, we can significantly enhance performance. This involves initializing Ray, creating multiple actor instances of an OCR worker class, and distributing the text extraction tasks among these actors. Each OCR worker uses the EasyOCR library to process images in parallel, thus speeding up the overall text extraction process.</p>
+            <h1>Utilizing Multithreading with Ray to Accelerate Text Extraction</h1>
+            <p>Setting up Ray clusters for OCR tasks involves configuring a distributed computing environment that can efficiently handle large-scale OCR workloads. Ray provides an easy-to-use framework for building and managing clusters, allowing us to leverage distributed computing for our OCR tasks.</p>
+        
+            <p>Ray clusters consist of a head node and multiple worker nodes. The head node is responsible for managing the cluster, while the worker nodes execute tasks assigned by the head node. This architecture allows us to scale our OCR system horizontally by adding more worker nodes as needed.</p>
+        
+            <p>Here are the steps to set up a Ray cluster for OCR tasks:</p>
+            
+            <ol>
+                <li><strong>Install Ray:</strong> To get started, install Ray on all nodes in the cluster. You can install Ray using pip:
+                    <pre><code>pip install ray</code></pre>
+                </li>
+                <li><strong>Start the Head Node:</strong> On the head node, start the Ray cluster by running the following command:
+                    <pre><code>ray start --head --port=6379</code></pre>
+                    This command initializes the head node and opens port 6379 for communication with worker nodes.
+                </li>
+                <li><strong>Start the Worker Nodes:</strong> On each worker node, connect to the head node by running the following command:
+                    <pre><code>ray start --address='head-node-ip:6379'</code></pre>
+                    Replace <code>head-node-ip</code> with the IP address of the head node.
+                </li>
+                <li><strong>Initialize Ray in Your Python Script:</strong> In your Python script, initialize Ray by specifying the address of the head node:
+                    <pre><code>import ray
+        ray.init(address='auto')</code></pre>
+                    This command connects your script to the Ray cluster, allowing you to distribute tasks across the cluster.
+                </li>
+            </ol>
+        
+            <h2>Distributed OCR Processing</h2>
+            <p>With Ray set up, we can distribute OCR tasks across the cluster. Ray's actor-based concurrency model allows us to parallelize OCR processing, significantly improving the speed and efficiency of text extraction.</p>
+        
+            <p>In a distributed OCR system, each worker node is responsible for processing a subset of the data. For example, when processing a batch of images, each image can be assigned to a different worker node. The nodes process the images concurrently, extracting text in parallel.</p>
+        
+            <p>Here is an example of how to distribute OCR tasks using Ray:</p>
+            
+            <pre><code>import ray
+        from easyocr import Reader
+        
+        # Initialize Ray
+        ray.init(address='auto')
+        
+        @ray.remote
+        class OCRWorker:
+            def __init__(self):
+                self.reader = Reader(['en'])
+        
+            def process_image(self, image_path):
+                result = self.reader.readtext(image_path)
+                return result
+        
+        # Create multiple OCRWorker actors
+        workers = [OCRWorker.remote() for _ in range(4)]
+        
+        # Distribute OCR tasks across the workers
+        image_paths = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg']
+        futures = [worker.process_image.remote(image) for worker, image in zip(workers, image_paths)]
+        
+        # Gather the results
+        results = ray.get(futures)
+        print(results)</code></pre>
+        
+            <p>In this example, we define an <code>OCRWorker</code> class that encapsulates the OCR logic using EasyOCR. We then create multiple instances of this class, each running on a different worker node. The <code>process_image</code> method processes a single image and returns the extracted text.</p>
+        
+            <p>We distribute the OCR tasks by assigning each image to a different worker node and use Ray's <code>remote</code> method to execute the tasks concurrently. Finally, we gather the results using <code>ray.get</code>, which blocks until all tasks are complete and returns the results.</p>
+        
+            <p>This approach allows us to scale our OCR system horizontally, processing multiple images in parallel and significantly reducing the time required for text extraction. By leveraging the distributed computing capabilities of Ray, we can build a robust and scalable OCR system that meets the demands of large-scale text recognition tasks.</p>
         </div>
+
         
         <div class="box">
             <h3>Setting Up Embedding Logic on Another Node in the Ray Cluster</h3>

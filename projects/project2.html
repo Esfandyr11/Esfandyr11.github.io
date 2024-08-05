@@ -100,10 +100,9 @@
         <li><strong>Recurrent Layers:</strong> Recurrent Neural Networks (RNNs) process the sequence of features extracted by the convolutional layers. RNNs are capable of modeling temporal dependencies, which is crucial for recognizing text as a sequence of characters.</li>
         <li><strong>Transcription Layer:</strong> This layer converts the output of the recurrent layers into a sequence of characters. The CTC loss function is used to align the predicted sequence with the ground truth text.</li>
     </ul>
-    
     <p>CRNNs with CTC loss have been shown to achieve state-of-the-art performance on various text recognition benchmarks. The combination of convolutional and recurrent layers allows the model to capture both spatial and temporal dependencies in the input image, leading to accurate text recognition.</p>
 
-    <img src="https://wandb.ai/authors/text-recognition-crnn-ctc/reports/Text-Recognition-With-CRNN-CTC-Network--VmlldzoxNTI5NDI/images/31.png" alt="CRNN Architecture" style="max-width: 100%; border-radius: 8px;">
+    <img src="    https://api.wandb.ai/files/authors/images/projects/82562/102ec7a3.png" alt="CRNN Architecture" style="max-width: 100%; border-radius: 8px;">
 
     <p>Setting up this architecture within the Ray cluster involves distributing the training and inference tasks across multiple nodes. Each node in the cluster is responsible for processing a subset of the data, and the results are aggregated to obtain the final output. This distributed approach ensures that the OCR system can handle large-scale text recognition tasks efficiently.</p>
 

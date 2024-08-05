@@ -82,11 +82,178 @@
         <h2>Esfandyr</h2>
         
         <div class="box">
-            <h3>Setting Up a Localized Easy OCR with Ray Cluster</h3>
-            <p>In the Lightning RAG project, the initial step involves setting up a localized Easy OCR system utilizing a Ray cluster. The process begins by configuring Ray Serve, a scalable model serving library built on Ray, enabling the deployment of machine learning models at scale with minimal code.</p>
-            <p>Ray Serve operates by creating a serve handle, which can route HTTP requests to the appropriate model. This is accomplished by initializing Ray and Ray Serve, then defining and deploying a model. The model class must be decorated with <code>@serve.deployment</code> and include the inference logic.</p>
-            <p>Incorporating real-time OCR involves continuously processing images as they are captured, which is crucial for applications like video processing, live document scanning, and automated data entry. This requires efficient handling of image streams and leveraging GPU acceleration for real-time performance. The EasyOCR library supports both CPU and GPU processing, making it suitable for real-time OCR tasks. Additionally, using Ray's parallel processing capabilities allows the workload to be distributed across multiple cores or nodes, further enhancing the real-time performance.</p>
+    <h1>Setup a Localized Easy OCR with a Ray Cluster</h1>
+    <p>Setting up a localized Easy OCR with a Ray cluster involves deploying distributed OCR processing using the Ray framework. This setup leverages Ray Serve for scalable and distributed model serving and utilizes multithreading to accelerate text extraction speed.</p>
+    
+    <p>Ray Serve is a scalable model serving library that can handle model inference requests from multiple clients. By setting up Ray Serve, we ensure that our OCR system can scale horizontally and handle a high volume of requests efficiently. This is achieved by distributing the workload across multiple nodes in a Ray cluster, each responsible for a portion of the OCR tasks.</p>
+    
+    <p>To accelerate text extraction, we employ multithreading within each node. Ray's actor-based concurrency model allows us to utilize all available CPU cores effectively. Each OCR task is assigned to a separate thread, enabling parallel processing and significantly reducing the time required for text extraction.</p>
+
+    <p>In real-time OCR systems, achieving low latency and high throughput is crucial. By leveraging Ray's distributed computing capabilities, we can scale our OCR system to handle large volumes of data while maintaining low latency. This setup is particularly useful in applications where real-time text extraction is required, such as automatic license plate recognition or document digitization.</p>
+    
+    <h2>Implementing CRNN with CTC Loss for Text Recognition</h2>
+    <p>The Convolutional Recurrent Neural Network (CRNN) combined with Connectionist Temporal Classification (CTC) loss is a powerful architecture for text recognition tasks. CRNNs are designed to handle sequential data, making them well-suited for recognizing text in images.</p>
+
+    <p>The architecture of CRNN consists of three main components:</p>
+    <ul>
+        <li><strong>Convolutional Layers:</strong> These layers extract visual features from the input image. They act as feature extractors, capturing important patterns in the image that are relevant to text recognition.</li>
+        <li><strong>Recurrent Layers:</strong> Recurrent Neural Networks (RNNs) process the sequence of features extracted by the convolutional layers. RNNs are capable of modeling temporal dependencies, which is crucial for recognizing text as a sequence of characters.</li>
+        <li><strong>Transcription Layer:</strong> This layer converts the output of the recurrent layers into a sequence of characters. The CTC loss function is used to align the predicted sequence with the ground truth text.</li>
+    </ul>
+    
+    <p>CRNNs with CTC loss have been shown to achieve state-of-the-art performance on various text recognition benchmarks. The combination of convolutional and recurrent layers allows the model to capture both spatial and temporal dependencies in the input image, leading to accurate text recognition.</p>
+
+    <img src="https://wandb.ai/authors/text-recognition-crnn-ctc/reports/Text-Recognition-With-CRNN-CTC-Network--VmlldzoxNTI5NDI/images/31.png" alt="CRNN Architecture" style="max-width: 100%; border-radius: 8px;">
+
+    <p>Setting up this architecture within the Ray cluster involves distributing the training and inference tasks across multiple nodes. Each node in the cluster is responsible for processing a subset of the data, and the results are aggregated to obtain the final output. This distributed approach ensures that the OCR system can handle large-scale text recognition tasks efficiently.</p>
+
+    <p>For example, when processing a document with multiple pages, each page can be assigned to a different node in the Ray cluster. The nodes process the pages concurrently, extracting text from each page in parallel. Once all pages are processed, the extracted text is combined to form the final output.</p>
+
+    <img src="https://wandb.ai/authors/text-recognition-crnn-ctc/reports/Text-Recognition-With-CRNN-CTC-Network--VmlldzoxNTI5NDI/images/30.png" alt="CRNN Training Process" style="max-width: 100%; border-radius: 8px;">
+
+    <p>This setup not only improves the speed of text extraction but also ensures that the system can scale to handle large volumes of data. By leveraging the distributed computing capabilities of Ray, we can build a robust and scalable OCR system that meets the demands of real-time text recognition applications.</p>
+
+    <pre>
+        <code>
+        ## Ref: https://keras.io/examples/vision/captcha_ocr/
+        
+        class CTCLayer(layers.Layer):
+            def __init__(self, name=None):
+                super().__init__(name=name)
+                self.loss_fn = keras.backend.ctc_batch_cost
+        
+            def call(self, y_true, y_pred):
+                batch_len = tf.cast(tf.shape(y_true)[0], dtype="int64")
+                input_length = tf.cast(tf.shape(y_pred)[1], dtype="int64")
+                label_length = tf.cast(tf.shape(y_true)[1], dtype="int64")
+        
+                input_length = input_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+                label_length = label_length * tf.ones(shape=(batch_len, 1), dtype="int64")
+        
+                loss = self.loss_fn(y_true, y_pred, input_length, label_length)
+                self.add_loss(loss)
+        
+                return y_pred
+        
+        def ctc_decoder(predictions):
+            text_list = []
+            pred_indcies = np.argmax(predictions, axis=2)
+            
+            for i in range(pred_indcies.shape[0]):
+                ans = ""
+                merged_list = [k for k,_ in groupby(pred_indcies[i])]
+                
+                for p in merged_list:
+                    if p != len(char_list):
+                        ans += char_list[int(p)]
+                
+                text_list.append(ans)
+                
+            return text_list
+        
+        figures_list = []
+        
+        class PlotPredictions(tf.keras.callbacks.Callback):
+            def __init__(self, frequency=1):
+                self.frequency = frequency
+                super(PlotPredictions, self).__init__()
+        
+                batch = validation_dataset.take(1)
+                self.batch_images = list(batch.as_numpy_iterator())[0]["image"]
+                self.batch_labels = list(batch.as_numpy_iterator())[0]["label"]
+        
+            def plot_predictions(self, epoch):
+                prediction_model = keras.models.Model(
+                    self.model.get_layer(name="image").input, 
+                    self.model.get_layer(name="dense").output
+                )
+                
+                preds = prediction_model.predict(self.batch_images)
+                pred_texts = ctc_decoder(preds)
+        
+                orig_texts = []
+                for label in self.batch_labels:
+                    orig_texts.append("".join([char_list[int(char_ind)] for char_ind in label if not(char_ind == len(char_list))]))
+        
+                fig , ax = plt.subplots(4, 4, figsize=(15, 5))
+                fig.suptitle('Epoch: '+str(epoch), weight='bold', size=14)
+        
+                for i in range(16):
+                    img = (self.batch_images[i, :, :, 0] * 255).astype(np.uint8)
+                    title = f"Prediction: {pred_texts[i]}"
+                    ax[i // 4, i % 4].imshow(img, cmap="gray")
+                    ax[i // 4, i % 4].set_title(title)
+                    ax[i // 4, i % 4].axis("off")
+                
+                plt.show()
+                figures_list.append(fig)
+        
+            def on_epoch_end(self, epoch, logs=None):
+                if epoch % self.frequency == 0:
+                    self.plot_predictions(epoch)
+        
+        def train(epochs):
+            inputs = Input(shape=(32, 128, 1), name="image")
+            labels = layers.Input(name="label", shape=(None,), dtype="float32")
+        
+            conv_1 = Conv2D(32, (3,3), activation = "selu", padding='same')(inputs)
+            pool_1 = MaxPool2D(pool_size=(2, 2))(conv_1)
+            
+            conv_2 = Conv2D(64, (3,3), activation = "selu", padding='same')(pool_1)
+            pool_2 = MaxPool2D(pool_size=(2, 2))(conv_2)
+        
+            conv_3 = Conv2D(128, (3,3), activation = "selu", padding='same')(pool_2)
+            conv_4 = Conv2D(128, (3,3), activation = "selu", padding='same')(conv_3)
+            pool_4 = MaxPool2D(pool_size=(2, 1))(conv_4)
+            
+            conv_5 = Conv2D(256, (3,3), activation = "selu", padding='same')(pool_4)
+            batch_norm_5 = BatchNormalization()(conv_5)
+            
+            conv_6 = Conv2D(256, (3,3), activation = "selu", padding='same')(batch_norm_5)
+            batch_norm_6 = BatchNormalization()(conv_6)
+            pool_6 = MaxPool2D(pool_size=(2, 1))(batch_norm_6)
+            
+            conv_7 = Conv2D(64, (2,2), activation = "selu")(pool_6)
+            squeezed = Lambda(lambda x: K.squeeze(x, 1))(conv_7)
+            
+            blstm_1 = Bidirectional(CuDNNLSTM(128, return_sequences=True))(squeezed)
+            blstm_2 = Bidirectional(CuDNNLSTM(128, return_sequences=True))(blstm_1)
+            softmax_output = Dense(len(char_list) + 1, activation = 'softmax', name="dense")(blstm_2)
+        
+            output = CTCLayer(name="ctc_loss")(labels, softmax_output)
+        
+            optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, clipnorm=1.0)
+            model = Model(inputs=[inputs, labels], outputs=output)
+            model.compile(optimizer = optimizer)
+        
+            print(model.summary())
+            file_path = "C_LSTM_best.hdf5"
+            
+            checkpoint = ModelCheckpoint(filepath=file_path, 
+                                        monitor='val_loss', 
+                                        verbose=1, 
+                                        save_best_only=True, 
+                                        mode='min')
+        
+            callbacks_list = [checkpoint, 
+                              WandbCallback(monitor="val_loss", 
+                                            mode="min", 
+                                            log_weights=True),
+                              PlotPredictions(frequency=1),
+                              EarlyStopping(patience=3, verbose=1)]
+        
+            history = model.fit(train_dataset, 
+                                epochs = epochs,
+                                validation_data=validation_dataset,
+                                verbose = 1,
+                                callbacks = callbacks_list,
+                                shuffle=True)
+            
+            return model
+        </code>
+        </pre>
         </div>
+
         
         <div class="box">
             <h3>Utilizing Multithreading with Ray to Accelerate Text Extraction</h3>

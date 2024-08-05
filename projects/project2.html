@@ -3,59 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Title - Siddhant Jha</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.css">
+    <title>Lightning RAG Project</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
     <style>
-        .project-content {
-            max-width: 800px;
-            margin: 100px auto;
-            padding: 40px;
-            background-color: rgba(1, 205, 254, 0.1);
-            border-radius: 10px;
-            font-size: 1.2em;
-            line-height: 1.6;
+        body {
+            font-family: "JetBrains Mono", monospace;
+            margin: 0;
+            background-color: #121212;
+            color: #ffffff;
         }
-        
-        .project-content h1 {
-            font-size: 2.5em;
-            color: #01cdfe;
-            margin-bottom: 20px;
+
+        nav {
+            background-color: #1c1c1c;
+            padding: 1rem;
+            text-align: left;
         }
-        
-        .project-content img {
+
+        nav a {
+            font-family: "JetBrains Mono", monospace;
+            color: #ffffff;
+            margin: 0 1rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #f39c12;
+        }
+
+        .content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .box {
+            background-color: #2e2e2e;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin: 2rem 0;
+            transition: transform 0.5s, box-shadow 0.5s;
+        }
+
+        .box img {
             max-width: 100%;
-            height: auto;
-            margin: 20px 0;
-            border: 2px solid #ff71ce;
+            border-radius: 8px;
         }
-        
-        .project-content p {
-            margin-bottom: 20px;
+
+        h1, h2, h3 {
+            color: #ffffff;
+        }
+
+        p {
+            color: #b0b0b0;
+        }
+
+        .equation {
+            color: #b0b0b0;
+            text-align: center;
+            margin: 1rem 0;
         }
     </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
-    <div class="background"></div>
-    <div class="grid"></div>
-    <nav class="navbar">
-        <ul>
-            <li><a href="../index.html">Home</a></li>
-            <li><a href="../index.html#projects">Projects</a></li>
-            <li><a href="../index.html#publications">Publications</a></li>
-            <li><a href="../index.html#about">About</a></li>
-            <li><a href="../hobbies.html">Hobbies</a></li>
-            <li><a href="../okresume.pdf" target="_blank">CV</a></li>
-        </ul>
+    <nav>
+        <a href="../index.html#home">Home</a>
+        <a href="../index.html#projects">Projects</a>
+        <a href="../index.html#publications">Publications</a>
+        <a href="../hobbies.html">Hobbies</a>
+        <a href="../okresume.pdf" target="_blank">CV</a>
     </nav>
-    <div class="project-content">
-        <h1>Project Title</h1>
-        <img src="../images/project1.jpg" alt="Project Image">
-        <p><strong>Description:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        <p><strong>Technologies used:</strong> Python, TensorFlow, OpenCV</p>
-        <p><strong>GitHub Repository:</strong> <a href="#" target="_blank">Link to GitHub</a></p>
-        <p><strong>Live Demo:</strong> <a href="#" target="_blank">Link to demo (if available)</a></p>
+    <div class="content">
+        <h1>Lightning RAG Project</h1>
+        <h2>Esfandyr</h2>
+        <div class="box">
+            <h3>1. Setting Up a Localized Easy OCR with Ray Cluster</h3>
+            <p>The Lightning RAG project starts with setting up a localized Easy OCR system using a Ray cluster. This involves:</p>
+            
+            <h4>1.1 Setting Up Ray Serve</h4>
+            <p>Ray Serve is a scalable model serving library built on Ray. It enables the deployment of machine learning models at scale with minimal code. Here are the steps to set up Ray Serve:</p>
+            <ol>
+                <li>Install Ray and Ray Serve:
+                    <p class="equation">pip install ray[serve]</p>
+                </li>
+                <li>Initialize Ray and Ray Serve:
+                    <pre><code>import ray
+from ray import serve
+
+ray.init()
+serve.start()</code></pre>
+                </li>
+                <li>Define and deploy a model:
+                    <pre><code>@serve.deployment
+class OCRModel:
+    def __call__(self, image: np.ndarray):
+        # Your OCR logic here
+        pass
+
+OCRModel.deploy()</code></pre>
+                </li>
+            </ol>
+
+            <h4>1.2 Utilizing Multithreading with Ray to Accelerate Text Extraction</h4>
+            <p>Ray's parallel processing capabilities can significantly speed up text extraction. By leveraging Ray's actors and tasks, we can distribute the OCR workload across multiple CPU cores:</p>
+            <pre><code>import ray
+from easyocr import Reader
+
+ray.init()
+
+@ray.remote
+class OCRWorker:
+    def __init__(self):
+        self.reader = Reader(['en'])
+
+    def extract_text(self, image_path):
+        return self.reader.readtext(image_path)
+
+workers = [OCRWorker.remote() for _ in range(ray.cluster_resources()['CPU'])]
+
+# Distribute tasks
+futures = [worker.extract_text.remote(image_path) for worker in workers]
+results = ray.get(futures)</code></pre>
+
+            <h3>2. Setting Up Embedding Logic on Another Node in the Ray Cluster</h3>
+            <p>The next step is to set up embedding logic using nomic-1.5v, fast embed, and Qdrant vector DB:</p>
+            
+            <h4>2.1 Embedding with nomic-1.5v</h4>
+            <p>To set up the embedding logic, install nomic and set up the embedding model:</p>
+            <p class="equation">pip install nomic</p>
+            <pre><code>from nomic import Embedding
+
+embedding_model = Embedding(model='nomic-1.5v')
+embeddings = embedding_model.embed(texts)</code></pre>
+
+            <h4>2.2 Fast Embed Integration</h4>
+            <p>Integrate fast embed for efficient text embeddings:</p>
+            <p class="equation">pip install fast-embed</p>
+            <pre><code>from fast_embed import FastEmbed
+
+embedder = FastEmbed()
+embeddings = embedder.embed(texts)</code></pre>
+
+            <h4>2.3 Setting Up Qdrant Vector DB</h4>
+            <p>Qdrant is a high-performance vector database for storing and querying embeddings:</p>
+            <p class="equation">pip install qdrant-client</p>
+            <pre><code>from qdrant_client import QdrantClient
+
+client = QdrantClient("http://localhost:6333")
+client.upload_collection(
+    collection_name="text_embeddings",
+    vectors=embeddings
+)</code></pre>
+
+            <h3>3. Creating a Customized Indexing Layer</h3>
+            <p>The indexing layer uses a hybrid approach combining HNSW-FINGER and sparse hybrid base index with IVPFQ:</p>
+            
+            <h4>3.1 HNSW-FINGER and IVPFQ Indexing</h4>
+            <p>HNSW-FINGER and IVPFQ combine hierarchical navigable small world graphs with inverted file and product quantization for efficient similarity search:</p>
+            <pre><code># HNSW-FINGER setup
+import hnswlib
+
+index = hnswlib.Index(space='l2', dim=embeddings.shape[1])
+index.init_index(max_elements=len(embeddings), ef_construction=200, M=16)
+index.add_items(embeddings)
+
+# IVPFQ setup
+from faiss import IndexIVFPQ, index_factory
+
+quantizer = index_factory(embeddings.shape[1], "IVF100,PQ10", faiss.METRIC_L2)
+quantizer.train(embeddings)
+quantizer.add(embeddings)</code></pre>
+
+            <h3>4. Retrieval Mechanism</h3>
+            <p>Setting up a retrieval mechanism involves using Qdrant and ChatWindowSummaryBuffer for continuous chat summarization:</p>
+            
+            <h4>4.1 Qdrant Retrieval</h4>
+            <p>Utilize Qdrant for vector search:</p>
+            <pre><code>results = client.search(
+    collection_name="text_embeddings",
+    query_vector=query_embedding,
+    top=10
+)</code></pre>
+
+            <h4>4.2 ChatWindowSummaryBuffer</h4>
+            <p>ChatWindowSummaryBuffer helps in managing long-term conversation memory:</p>
+            <pre><code>from chat_window_summary_buffer import ChatWindowSummaryBuffer
+
+summary_buffer = ChatWindowSummaryBuffer()
+summary_buffer.add_message(user_id, message)
+summary = summary_buffer.get_summary(user_id)</code></pre>
+
+            <h3>5. AWS Cluster for File Ingestion and Embedding</h3>
+            <p>Setting up an AWS cluster to ingest 1000 files within 1 minute and embed them in 3-4 minutes:</p>
+            
+            <h4>5.1 AWS Cluster Setup</h4>
+            <p>Deploy a Ray cluster on AWS:</p>
+            <pre><code># ray-cluster.yaml
+cluster_name: lightning-rag
+min_workers: 5
+max_workers: 10
+initial_workers: 5
+autoscaling_mode: default
+worker_type:
+  instance_type: m5.large
+  image_id: latest_ray</code></pre>
+
+            <h4>5.2 Ray Serve for AWS</h4>
+            <p>Use Ray Serve to manage and deploy the models:</p>
+            <pre><code># Deploy Ray Serve on AWS
+ray up ray-cluster.yaml
+ray exec ray-cluster.yaml "serve start"</code></pre>
+
+            <h4>5.3 Integration with Custom GROQ LLM Server</h4>
+            <p>Integrate with a custom</p>
+        </div>
     </div>
-    <script src="../script.js"></script>
 </body>
 </html>

@@ -3,59 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Title - Siddhant Jha</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../styles.css">
+    <title>Text-SQL System: Optimizing Data for Vector Search</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
     <style>
-        .project-content {
-            max-width: 800px;
-            margin: 100px auto;
-            padding: 40px;
-            background-color: rgba(1, 205, 254, 0.1);
-            border-radius: 10px;
-            font-size: 1.2em;
-            line-height: 1.6;
+        body {
+            font-family: "JetBrains Mono", monospace;
+            margin: 0;
+            background-color: #121212;
+            color: #ffffff;
         }
-        
-        .project-content h1 {
-            font-size: 2.5em;
-            color: #01cdfe;
-            margin-bottom: 20px;
+
+        nav {
+            background-color: #1c1c1c;
+            padding: 1rem;
+            text-align: left;
         }
-        
-        .project-content img {
+
+        nav a {
+            font-family: "JetBrains Mono", monospace;
+            color: #ffffff;
+            margin: 0 1rem;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #f39c12;
+        }
+
+        .content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .box {
+            background-color: #2e2e2e;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin: 2rem 0;
+            transition: transform 0.5s, box-shadow 0.5s;
+        }
+
+        .box img {
             max-width: 100%;
-            height: auto;
-            margin: 20px 0;
-            border: 2px solid #ff71ce;
+            border-radius: 8px;
         }
-        
-        .project-content p {
-            margin-bottom: 20px;
+
+        h1, h2, h3 {
+            color: #ffffff;
+        }
+
+        p, ul, ol {
+            color: #b0b0b0;
+        }
+
+        .equation {
+            color: #b0b0b0;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        pre {
+            background-color: #1e1e1e;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: "JetBrains Mono", monospace;
+            color: #e6e6e6;
+        }
+
+        .hypothesis, .test {
+            border-left: 4px solid #f39c12;
+            padding-left: 1rem;
+            margin: 1rem 0;
         }
     </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
-    <div class="background"></div>
-    <div class="grid"></div>
-    <nav class="navbar">
-        <ul>
-            <li><a href="../index.html">Home</a></li>
-            <li><a href="../index.html#projects">Projects</a></li>
-            <li><a href="../index.html#publications">Publications</a></li>
-            <li><a href="../index.html#about">About</a></li>
-            <li><a href="../hobbies.html">Hobbies</a></li>
-            <li><a href="../okresume.pdf" target="_blank">CV</a></li>
-        </ul>
+    <nav>
+        <a href="../index.html#home">Home</a>
+        <a href="../index.html#projects">Projects</a>
+        <a href="../index.html#publications">Publications</a>
+        <a href="../hobbies.html">Hobbies</a>
     </nav>
-    <div class="project-content">
-        <h1>Project Title</h1>
-        <img src="../images/project1.jpg" alt="Project Image">
-        <p><strong>Description:</strong> Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        <p><strong>Technologies used:</strong> Python, TensorFlow, OpenCV</p>
-        <p><strong>GitHub Repository:</strong> <a href="#" target="_blank">Link to GitHub</a></p>
-        <p><strong>Live Demo:</strong> <a href="#" target="_blank">Link to demo (if available)</a></p>
+    <div class="content">
+        <h1>Text-SQL System: Optimizing Data for Vector Search</h1>
+
+        <div class="box" id="introduction">
+            <h2>1. Introduction</h2>
+            <p>Hey there! Today, I want to talk about how we can optimize our data for better vector search. We're dealing with a massive scale here—10 PostgreSQL databases, each with 10-12 tables, and each table having 300-450 columns. That's a lot of data!</p>
+            <p>We'll go through setting up metadata dictionaries, passing embeddings to a vector database (FAISS) with HNSW indexing and flat product quantization, querying for the most similar columns, and pushing this into the information space of a language model (LLM) with the prompt and metadata embedding.</p>
+        </div>
+
+        <div class="box" id="scale">
+            <h2>2. The Scale of the Data</h2>
+            <p>So, let's break down the scale of the data we're dealing with. We have 10 PostgreSQL databases, and each database has around 10-12 tables. Each of these tables has a whopping 300-450 columns. That's a lot of columns to keep track of!</p>
+            <p>To give you an idea, if we have 10 databases, each with 12 tables, and each table with 450 columns, we're looking at:</p>
+            <p class="equation">
+                \[ \text{Total Columns} = 10 \times 12 \times 450 = 54,000 \text{ columns} \]
+            </p>
+            <p>That's a lot of data to manage and search through efficiently.</p>
+        </div>
+
+        <div class="box" id="metadata">
+            <h2>3. Setting Up Metadata Dictionaries</h2>
+            <p>To make sense of all this data, we need to set up metadata dictionaries. These dictionaries will contain information about column names, table names, original names, data types, query examples, and row data examples.</p>
+            <p>Here's an example of what a metadata dictionary might look like:</p>
+            <pre><code>
+{
+  "table_name": "sales_data",
+  "columns": [
+    {
+      "column_name": "product_id",
+      "original_name": "product_id",
+      "data_type": "integer",
+      "query_example": "SELECT product_id FROM sales_data WHERE product_id = 123;",
+      "row_data_example": 123
+    },
+    {
+      "column_name": "product_name",
+      "original_name": "product_name",
+      "data_type": "text",
+      "query_example": "SELECT product_name FROM sales_data WHERE product_name LIKE '%chair%';",
+      "row_data_example": "Ergonomic Office Chair"
+    },
+    // More columns...
+  ]
+}
+            </code></pre>
+            <p>This structure helps us keep track of all the important details about our data.</p>
+        </div>
+
+        <div class="box" id="vector-database">
+            <h2>4. Passing Embeddings to Vector Database (FAISS)</h2>
+            <p>Next, we need to pass these embeddings to a vector database. We'll use FAISS (Facebook AI Similarity Search) with HNSW (Hierarchical Navigable Small World) indexing and flat product quantization.</p>
+            <p>HNSW is a graph-based algorithm that allows for efficient similarity search in high-dimensional spaces. It works by building a graph where each node represents a data point, and edges connect similar nodes. This structure allows for fast nearest neighbor searches.</p>
+            <p>Flat product quantization, on the other hand, is a technique that reduces the dimensionality of the vectors while preserving the similarity information. This helps in reducing the storage and computation requirements.</p>
+            <p>The HNSW algorithm can be mathematically represented as follows:</p>
+            <p class="equation">
+                \[ \text{HNSW}(G, q) = \arg\min_{v \in G} d(q, v) \]
+            </p>
+            <p>Where \( G \) is the graph, \( q \) is the query vector, and \( d \) is the distance metric (e.g., Euclidean distance).</p>
+            <p>For flat product quantization, the process involves decomposing the original vector space into a product of lower-dimensional subspaces. This can be represented as:</p>
+            <p class="equation">
+                \[ V = V_1 \times V_2 \times \ldots \times V_k \]
+            </p>
+            <p>Where \( V \) is the original vector space, and \( V_1, V_2, \ldots, V_k \) are the lower-dimensional subspaces.</p>
+        </div>
+
+        <div class="box" id="querying">
+            <h2>5. Querying the Vector Database</h2>
+            <p>Once we have our embeddings in the vector database, we can query it for the top N most semantically and contextually similar columns. This is where the magic happens!</p>
+            <p>We can use a similarity metric like cosine similarity to find the most similar columns. The cosine similarity between two vectors A and B is calculated as:</p>
+            <p class="equation">
+                \[ \text{similarity} = \cos(\theta) = \frac{A \cdot B}{\|A\| \|B\|} = \frac{\sum_{i=1}^n A_i B_i}{\sqrt{\sum_{i=1}^n A_i^2} \sqrt{\sum_{i=1}^n B_i^2}} \]
+            </p>
+            <p>The cosine distance is then defined as \(1 - \text{similarity}\).</p>
+            <p>Another important metric is the Euclidean distance, which is calculated as:</p>
+            <p class="equation">
+                \[ d(A, B) = \sqrt{\sum_{i=1}^n (A_i - B_i)^2} \]
+            </p>
+            <p>For high-dimensional spaces, the Manhattan distance can also be useful:</p>
+            <p class="equation">
+                \[ d(A, B) = \sum_{i=1}^n |A_i - B_i| \]
+            </p>
+            <p>These distance metrics help us find the most similar columns in the vector space.</p>
+        </div>
+
+        <div class="box" id="llm">
+            <h2>6. Pushing into the LLM Information Space</h2>
+            <p>Finally, we push this information into the information space of a language model (LLM) with the prompt and the metadata embedding. This allows the LLM to understand the context and semantics of the data better.</p>
+            <p>The LLM can then use this information to generate more accurate and relevant queries. For example, if we ask the LLM to find all products related to "office chairs," it can use the metadata and embeddings to find the most relevant columns and generate a query like:</p>
+            <pre><code>
+SELECT product_name, price FROM sales_data WHERE product_name LIKE '%office chair%';
+            </code></pre>
+            <p>The process of embedding the metadata can be represented as:</p>
+            <p class="equation">
+                \[ E = \text{Embedding}(M) \]
+            </p>
+            <p>Where \( E \) is the embedding vector, and \( M \) is the metadata dictionary. The embedding function can be a neural network or any other suitable model.</p>
+            <p>The LLM then uses this embedding to generate the query:</p>
+            <p class="equation">
+                \[ Q = \text{LLM}(E, P) \]
+            </p>
+            <p>Where \( Q \) is the generated query, \( E \) is the embedding vector, and \( P \) is the prompt.</p>
+        </div>
+
+        <div class="box" id="conclusion">
+            <h2>7. Conclusion</h2>
+            <p>And that's it! By setting up metadata dictionaries, passing embeddings to a vector database, querying for the most similar columns, and pushing this information into the LLM, we can optimize our data for better vector search.</p>
+            <p>This approach allows us to handle large-scale data efficiently and generate more accurate and relevant queries. It's a win-win!</p>
+        </div>
     </div>
-    <script src="../script.js"></script>
 </body>
 </html>

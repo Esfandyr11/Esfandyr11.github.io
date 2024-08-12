@@ -257,8 +257,8 @@
     <p>
         A general digital filter structure with quantizers before delay elements can be represented as shown below, with the quantizers implementing rounding for the granular quantization and saturation arithmetic for the overflow nonlinearity.
     </p>
-    <img src="path_to_image_figure_2_23.png" alt="Digital Filter Including Quantizers at the Delay Inputs">
-    <p class="image-caption">FIGURE 2.23. Digital Filter Including Quantizers at the Delay Inputs</p>
+    <img src="https://ars.els-cdn.com/content/image/3-s2.0-B9780121709600500621-f60-23-9780121709600.gif" alt="Digital Filter Including Quantizers at the Delay Inputs">
+    <p class="image-caption">Digital Filter Including Quantizers at the Delay Inputs</p>
     
     <h3>2.11.1 Coefficient Quantization</h3>
     <p>
@@ -310,10 +310,10 @@
     <p>
         where \( P_{e_i}(e^{j\omega}) = \sigma_e^2 \) for all \( i \), and each \( G_i(z) \) is a transfer function from multiplier output \( g_i(n) \) to the output of the filter as shown in Figure 2.25. The word length, including the sign bit, is \( b + 1 \) bits, and \( K \) is the number of multipliers in the filter.
     </p>
-    <img src="path_to_image_figure_2_25.png" alt="Digital Filter Including Scaling and Noise Transfer Functions">
-    <p class="image-caption">FIGURE 2.25. Digital Filter Including Scaling and Noise Transfer Functions.</p>
+    <img src="https://ars.els-cdn.com/content/image/3-s2.0-B9780121709600500621-f60-25-9780121709600.gif" alt="Digital Filter Including Scaling and Noise Transfer Functions">
+    <p class="image-caption"> Digital Filter Including Scaling and Noise Transfer Functions.</p>
 
-    <h3>2.11.3 Overflow Limit Cycles</h3>
+    <h3> Overflow Limit Cycles</h3>
     <p>
         Overflow nonlinearities influence the most significant bits of the signal and cause severe distortion. An overflow can give rise to self-sustained, high-amplitude oscillations known as overflow limit cycles. Digital filters that are free of zero-input limit cycles are also free of overflow oscillations if the overflow nonlinearities are implemented with saturation arithmetic, replacing the number in overflow with a number of the same sign and maximum magnitude that fits the available word length.
     </p>
@@ -405,7 +405,7 @@
         For \( L_2 \) scaling, we order the section such that \( P_i \) is decreasing. For \( L_{\infty} \) scaling, \( P_i \) should be increasing.
     </p>
 
-    <h3>2.11.4 Granularity Limit Cycles</h3>
+    <h3>Granularity Limit Cycles</h3>
     <p>
         Granularity limit cycles occur in digital filters when the quantization step size is too large, leading to a situation where the output oscillates between a small number of discrete values. This is typically seen in recursive digital filters where the feedback loop amplifies the quantization error. Granularity limit cycles can cause severe distortion in the output signal and are generally undesirable. They can be minimized by reducing the quantization step size or by using dithering techniques, which add a small amount of noise to the signal before quantization to decorrelate the quantization error from the signal.
     </p>

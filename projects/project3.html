@@ -142,7 +142,7 @@
             <p>This structure helps us keep track of all the important details about our data.</p>
         </div>
 
-        <div class="box" id="vector-database">
+       <div class="box" id="vector-database">
     <h2>4. Passing Embeddings to Vector Database (FAISS)</h2>
     <p>
         Next, we need to pass these embeddings to a vector database. We'll use FAISS (Facebook AI Similarity Search) with HNSW (Hierarchical Navigable Small World) indexing and flat product quantization.
@@ -200,10 +200,52 @@
     <p>
         The goal of product quantization is to minimize the quantization error, which is the difference between the original vector and its quantized representation. This process is crucial in scenarios where large-scale vector data needs to be stored and queried efficiently.
     </p>
+
+    <h3>Quantization Rate by Product Quantizers</h3>
     <p>
-        For a deeper dive into product quantization, including mathematical derivations and practical examples, you can refer to this <a href="https://www.sciencedirect.com/topics/computer-science/product-quantization">detailed explanation on ScienceDirect</a>.
+        The optimal product quantizer can be found by solving the integral bit allocation problem:
+    </p>
+    <p class="equation">
+        \[ \min \left\{ \|W - \hat{W}(N_1, \dots, N_m, \text{prod})\|^2, N_1, \dots, N_m \geq 1, N_1 \times \dots \times N_m \leq N, m \geq 1 \right\} \]
+    </p>
+    <p>
+        Expanding this, we get:
+    </p>
+    <p class="equation">
+        \[ \|W - \hat{W}(N_1, \dots, N_m, \text{prod})\|^2_2 = \sum_{n \geq 1} \lambda_n \|\hat{\xi}_n^{N_n} - \xi_n\|^2_2 \]
+    </p>
+    <p>
+        This further simplifies to:
+    </p>
+    <p class="equation">
+        \[ \sum_{n=1}^m \lambda_n \left( e^{N_n^2(N(0;1), \mathbb{R})} - 1 \right) + T^2_2 \]
+    </p>
+    <p>
+        Given that:
+    </p>
+    <p class="equation">
+        \sum_{n \geq 1} \lambda_n = E \sum_{n \geq 1} \left(W | e_n W\right)^2_2 = E \int_0^T W_t^2 dt = \int_0^T t dt = T^2_2.
+    </p>
+    <p>
+        According to Theorem 6.3 (as referenced in Luschgy and Pagès [2002]), for every \( N \geq 1 \), there exists an optimal scalar product quantizer of size at most \( N \) (or at level \( N \)), denoted by \( \hat{W}(N, \text{prod}) \), of the Brownian motion defined as the solution to the minimization problem. These optimal product quantizers form a rate-optimal sequence, such that:
+    </p>
+    <p class="equation">
+        \|W - \hat{W}(N, \text{prod})\|_2 \leq c_W T (\log N)^{1/2}.
+    </p>
+    <p>
+        A sketch of the proof shows that by assuming \( T = 1 \) without loss of generality and combining the expansion with Zador's theorem, we get:
+    </p>
+    <p class="equation">
+        \|W - \hat{W}(N_1, \dots, N_m, \text{prod})\|^2_2 \leq C \left( \sum_{n=1}^m \frac{1}{n^2 N_n^2} \right) + \sum_{n \geq m+1} \lambda_n \leq C' \left( \sum_{n=1}^m \frac{1}{n^2 N_n^2} + \frac{1}{m} \right),
+    </p>
+    <p>
+        where \( \Pi_n N_n \leq N \). Setting \( m := m(N) = \lceil \log N \rceil \) and \( N_k = \lceil (m! N)^{1/m}/k \rceil \geq 1, \) for \( k = 1, \dots, m \), gives the upper bound as described.
+    </p>
+    <p>
+        For a more comprehensive explanation of product quantization and the mathematical derivations, you can explore this <a href="https://www.sciencedirect.com/topics/computer-science/product-quantization">detailed resource</a>.
     </p>
 </div>
+
 
 
         <div class="box" id="querying">

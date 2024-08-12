@@ -143,21 +143,68 @@
         </div>
 
         <div class="box" id="vector-database">
-            <h2>4. Passing Embeddings to Vector Database (FAISS)</h2>
-            <p>Next, we need to pass these embeddings to a vector database. We'll use FAISS (Facebook AI Similarity Search) with HNSW (Hierarchical Navigable Small World) indexing and flat product quantization.</p>
-            <p>HNSW is a graph-based algorithm that allows for efficient similarity search in high-dimensional spaces. It works by building a graph where each node represents a data point, and edges connect similar nodes. This structure allows for fast nearest neighbor searches.</p>
-            <p>Flat product quantization, on the other hand, is a technique that reduces the dimensionality of the vectors while preserving the similarity information. This helps in reducing the storage and computation requirements.</p>
-            <p>The HNSW algorithm can be mathematically represented as follows:</p>
-            <p class="equation">
-                \[ \text{HNSW}(G, q) = \arg\min_{v \in G} d(q, v) \]
-            </p>
-            <p>Where \( G \) is the graph, \( q \) is the query vector, and \( d \) is the distance metric (e.g., Euclidean distance).</p>
-            <p>For flat product quantization, the process involves decomposing the original vector space into a product of lower-dimensional subspaces. This can be represented as:</p>
-            <p class="equation">
-                \[ V = V_1 \times V_2 \times \ldots \times V_k \]
-            </p>
-            <p>Where \( V \) is the original vector space, and \( V_1, V_2, \ldots, V_k \) are the lower-dimensional subspaces.</p>
-        </div>
+    <h2>4. Passing Embeddings to Vector Database (FAISS)</h2>
+    <p>
+        Next, we need to pass these embeddings to a vector database. We'll use FAISS (Facebook AI Similarity Search) with HNSW (Hierarchical Navigable Small World) indexing and flat product quantization.
+    </p>
+    <p>
+        FAISS is a popular library for efficient similarity search and clustering of dense vectors. It provides various algorithms for both exact and approximate nearest neighbor searches, making it highly scalable and flexible.
+    </p>
+    
+    <h3>HNSW Indexing</h3>
+    <p>
+        HNSW is a graph-based algorithm that allows for efficient similarity search in high-dimensional spaces. The algorithm works by constructing a multi-layered graph, where each node represents a data point, and edges connect similar nodes. This hierarchical structure allows for fast nearest neighbor searches by navigating through different layers of the graph.
+    </p>
+    <p>
+        Mathematically, the HNSW algorithm can be represented as:
+    </p>
+    <p class="equation">
+        \[ \text{HNSW}(G, q) = \arg\min_{v \in G} d(q, v) \]
+    </p>
+    <p>
+        Where \( G \) is the graph, \( q \) is the query vector, and \( d \) is the distance metric (e.g., Euclidean distance).
+    </p>
+    <p>
+        The process of building the HNSW graph can be understood as follows:
+    </p>
+    <ol>
+        <li><strong>Initialization:</strong> Start by creating the first layer of the graph with all data points. Each node in this layer is connected to a certain number of nearest neighbors.</li>
+        <li><strong>Layer Creation:</strong> Additional layers are created by selecting a subset of nodes from the previous layer. These layers become progressively sparser.</li>
+        <li><strong>Graph Navigation:</strong> During the search, the algorithm starts from the topmost layer and navigates downwards, moving from one node to its nearest neighbors until the closest nodes in the lowest layer are found.</li>
+    </ol>
+    <p>
+        This hierarchical approach significantly reduces the search complexity and ensures a balance between accuracy and speed. For a more detailed understanding, you can refer to the <a href="https://arxiv.org/pdf/1603.09320">HNSW paper</a>.
+    </p>
+    
+    <h3>Flat Product Quantization</h3>
+    <p>
+        Flat product quantization is a dimensionality reduction technique that reduces the storage and computation requirements while preserving the similarity information of the vectors. This technique decomposes the original high-dimensional vector space into a product of lower-dimensional subspaces, which are quantized independently.
+    </p>
+    <p>
+        The decomposition can be mathematically represented as:
+    </p>
+    <p class="equation">
+        \[ V = V_1 \times V_2 \times \ldots \times V_k \]
+    </p>
+    <p>
+        Where \( V \) is the original vector space, and \( V_1, V_2, \ldots, V_k \) are the lower-dimensional subspaces.
+    </p>
+    <p>
+        Each subspace \( V_i \) is quantized separately, and the product quantization (PQ) process can be illustrated as follows:
+    </p>
+    <ol>
+        <li><strong>Partitioning:</strong> The original vector space \( V \) is partitioned into \( k \) subspaces, each of which is lower-dimensional.</li>
+        <li><strong>Quantization:</strong> Each subspace \( V_i \) is quantized independently. The quantization can be achieved by selecting a set of centroids (codebook) that best represent the data points within each subspace.</li>
+        <li><strong>Encoding:</strong> Each vector in the original space is represented as a concatenation of the indices of the nearest centroids in each subspace. This process results in a compressed representation of the vectors.</li>
+    </ol>
+    <p>
+        The goal of product quantization is to minimize the quantization error, which is the difference between the original vector and its quantized representation. This process is crucial in scenarios where large-scale vector data needs to be stored and queried efficiently.
+    </p>
+    <p>
+        For a deeper dive into product quantization, including mathematical derivations and practical examples, you can refer to this <a href="https://www.sciencedirect.com/topics/computer-science/product-quantization">detailed explanation on ScienceDirect</a>.
+    </p>
+</div>
+
 
         <div class="box" id="querying">
             <h2>5. Querying the Vector Database</h2>

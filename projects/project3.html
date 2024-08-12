@@ -142,7 +142,7 @@
             <p>This structure helps us keep track of all the important details about our data.</p>
         </div>
 
-       <div class="box" id="vector-database">
+                  <div class="box" id="vector-database">
     <h2>4. Passing Embeddings to Vector Database (FAISS)</h2>
     <p>
         Next, we need to pass these embeddings to a vector database. We'll use FAISS (Facebook AI Similarity Search) with HNSW (Hierarchical Navigable Small World) indexing and flat product quantization.
@@ -159,7 +159,7 @@
         Mathematically, the HNSW algorithm can be represented as:
     </p>
     <p class="equation">
-        \[ \text{HNSW}(G, q) = \arg\min_{v \in G} d(q, v) \]
+        \( \text{HNSW}(G, q) = \arg\min_{v \in G} d(q, v) \)
     </p>
     <p>
         Where \( G \) is the graph, \( q \) is the query vector, and \( d \) is the distance metric (e.g., Euclidean distance).
@@ -184,7 +184,7 @@
         The decomposition can be mathematically represented as:
     </p>
     <p class="equation">
-        \[ V = V_1 \times V_2 \times \ldots \times V_k \]
+        \( V = V_1 \times V_2 \times \ldots \times V_k \)
     </p>
     <p>
         Where \( V \) is the original vector space, and \( V_1, V_2, \ldots, V_k \) are the lower-dimensional subspaces.
@@ -218,7 +218,7 @@
         This further simplifies to:
     </p>
     <p class="equation">
-        \[ \sum_{n=1}^m \lambda_n \left( e^{N_n^2(N(0;1), \mathbb{R})} - 1 \right) + T^2_2 \]
+        \sum_{n=1}^m \lambda_n \left( e^{N_n^2(N(0;1), \mathbb{R})} - 1 \right) + T^2_2
     </p>
     <p>
         Given that:
@@ -244,8 +244,172 @@
     <p>
         For a more comprehensive explanation of product quantization and the mathematical derivations, you can explore this <a href="https://www.sciencedirect.com/topics/computer-science/product-quantization">detailed resource</a>.
     </p>
-</div>
 
+    <h2>2.11 Quantization in Digital Filters</h2>
+    <p>
+        Quantization errors in digital filters can be classified as:
+    </p>
+    <ul>
+        <li>Round-off errors derived from internal signals that are quantized before or after more down additions;</li>
+        <li>Deviations in the filter response due to finite word length representation of multiplier coefficients; and</li>
+        <li>Errors due to the representation of the input signal with a set of discrete levels.</li>
+    </ul>
+    <p>
+        A general digital filter structure with quantizers before delay elements can be represented as shown below, with the quantizers implementing rounding for the granular quantization and saturation arithmetic for the overflow nonlinearity.
+    </p>
+    <img src="path_to_image_figure_2_23.png" alt="Digital Filter Including Quantizers at the Delay Inputs">
+    <p class="image-caption">FIGURE 2.23. Digital Filter Including Quantizers at the Delay Inputs</p>
+    
+    <h3>2.11.1 Coefficient Quantization</h3>
+    <p>
+        Approximations are known to generate digital filter coefficients with high accuracy. After coefficient quantization, the frequency response of the realized digital filter will deviate from the ideal response and eventually fail to meet the prescribed specifications. The sensitivity of the filter response to coefficient quantization varies with the structure. The development of low-sensitivity digital filter realizations has garnered significant interest (Antoniou, 1993; Diniz et al., 2002).
+    </p>
+    <p>
+        A common procedure is to design the digital filter with infinite coefficient word length, satisfying tighter specifications than required. Then, quantize the coefficients and check if the prescribed specifications are still met.
+    </p>
+
+    <h3>2.11.2 Quantization Noise</h3>
+    <p>
+        In fixed-point arithmetic, a number with a modulus less than one can be represented as follows:
+    </p>
+    <p class="equation">
+        \( x = b_0b_1b_2b_3 \ldots b_b, \)
+    </p>
+    <p>
+        where \( b_0 \) is the sign bit, and \( b_1b_2b_3 \ldots b_b \) represent the modulus using a binary code. For digital filtering, the most widely used binary code is the two's complement representation, where for positive numbers \( b_0 = 0 \) and for negative numbers \( b_0 = 1 \). The fractionary part of the number, called \( x_2 \), is represented as:
+    </p>
+    <p class="equation">
+        \( x_2 = \begin{cases} 
+        x & \text{if } b_0 = 0, \\
+        2^{-|x|} & \text{if } b_0 = 1.
+        \end{cases} \)
+    </p>
+    <p>
+        The discussion here focuses on the fixed-point implementation.
+    </p>
+    <p>
+        A finite word length multiplier can be modeled in terms of an ideal multiplier followed by a single noise source \( e(n) \) as shown below:
+    </p>
+    <img src="path_to_image_figure_2_24.png" alt="Model for the Noise Generated after a Multiplication">
+    <p class="image-caption">FIGURE 2.24. Model for the Noise Generated after a Multiplication</p>
+    <p>
+        For product quantization performed by rounding and for signal levels throughout the filter much larger than the quantization step \( q = 2^{-b} \), it can be shown that the power spectral density of the noise source \( e_i(n) \) is given by:
+    </p>
+    <p class="equation">
+        \( P_{e_i}(z) = \frac{q^2}{12} = \frac{2^{-2b}}{12}. \)
+    </p>
+    <p>
+        In this case, \( e_i(n) \) represents a zero mean white noise process. In practice, \( e_i(n) \) and \( e_k(n + l) \) are statistically independent for any value of \( n \) or \( l \) (for \( i \neq k \)). As a result, the contributions of different noise sources can be considered separately using the principle of superposition.
+    </p>
+    <p>
+        The power spectral density of the output noise in a fixed-point digital-filter implementation is given by:
+    </p>
+    <p class="equation">
+        \( P_y(z) = \sigma_e^2 \sum_{i=1}^{K} G_i(z)G_i(z^{-1}), \)
+    </p>
+    <p>
+        where \( P_{e_i}(e^{j\omega}) = \sigma_e^2 \) for all \( i \), and each \( G_i(z) \) is a transfer function from multiplier output \( g_i(n) \) to the output of the filter as shown in Figure 2.25. The word length, including the sign bit, is \( b + 1 \) bits, and \( K \) is the number of multipliers in the filter.
+    </p>
+    <img src="path_to_image_figure_2_25.png" alt="Digital Filter Including Scaling and Noise Transfer Functions">
+    <p class="image-caption">FIGURE 2.25. Digital Filter Including Scaling and Noise Transfer Functions.</p>
+
+    <h3>2.11.3 Overflow Limit Cycles</h3>
+    <p>
+        Overflow nonlinearities influence the most significant bits of the signal and cause severe distortion. An overflow can give rise to self-sustained, high-amplitude oscillations known as overflow limit cycles. Digital filters that are free of zero-input limit cycles are also free of overflow oscillations if the overflow nonlinearities are implemented with saturation arithmetic, replacing the number in overflow with a number of the same sign and maximum magnitude that fits the available word length.
+    </p>
+    <p>
+        When an input signal is applied to a digital filter, overflow might occur. As a result, input signal scaling is required to reduce the probability of overflow to an acceptable level. Ideally, signal scaling should be applied to ensure that the probability of overflow is the same at each internal node of the digital filter. This maximizes the signal-to-noise ratio in fixed-point implementations.
+    </p>
+    <p>
+        In two's complement arithmetic, adding more than two numbers will be correct regardless of the order in which they are added, even if overflow occurs in partial summation, as long as the overall sum is within the available range. Therefore, a simplified scaling technique can be used where only the multiplier inputs require scaling. A multiplier is used at the input of the filter section to perform scaling, as illustrated in Figure 2.25.
+    </p>
+    <p>
+        The signal at the multiplier input is given by:
+    </p>
+    <p class="equation">
+        \( x_i(n) = \frac{1}{2\pi j} \oint_{c} X_i(z)z^{n-1} dz = \frac{1}{2\pi} \int_{0}^{2\pi} F_i(e^{j\omega})X(e^{j\omega})e^{j\omega n} d\omega, \)
+    </p>
+    <p>
+        where \( c \) is the convergence region common to \( F_i(z) \) and \( X(z) \).
+    </p>
+    <p>
+        The constant \( \lambda \) is usually calculated using the \( L_p \) norm of the transfer function from the filter input to the multiplier input \( F_i(z) \), depending on the known properties of the input signal. The \( L_p \) norm of \( F_i(z) \) is defined as:
+    </p>
+    <p class="equation">
+        \( \|F_i(e^{j\omega})\|_p = \left[\frac{1}{2\pi} \int_{0}^{2\pi} |F_i(e^{j\omega})|^p d\omega\right]^{\frac{1}{p}}, \)
+    </p>
+    <p>
+        for each \( p \geq 1 \), such that \( \int_{0}^{2\pi} |F_i(e^{j\omega})|^p d\omega \leq \infty \). In general, the following inequality holds:
+    </p>
+    <p class="equation">
+        \( |x_i(n)| \leq \|F_i\|_p \|X\|_q, \quad \left(\frac{1}{p} + \frac{1}{q} = 1\right), \)
+    </p>
+    <p>
+        for \( p, q = 1, 2, \) and \( \infty \).
+    </p>
+    <p>
+        The scaling ensures that the magnitudes of multiplier inputs are bounded by a number \( M_{\text{max}} \) when \( |x(n)| \leq M_{\text{max}} \). To ensure that all multiplier inputs are bounded by \( M_{\text{max}} \), \( \lambda \) must be chosen as follows:
+    </p>
+    <p class="equation">
+        \( \lambda = \frac{1}{\text{Max}\{\|F_1\|_p, \ldots, \|F_K\|_p\}}, \)
+    </p>
+    <p>
+        which means that:
+    </p>
+    <p class="equation">
+        \( \|F'_i(e^{j\omega})\|_p \leq 1, \text{ for } \|X(e^{j\omega})\|_q \leq M_{\text{max}}. \)
+    </p>
+    <p>
+        The number \( K \) is the number of multipliers in the filter.
+    </p>
+    <p>
+        The norm \( p \) is usually chosen to be infinity or 2. The \( L_{\infty} \) norm is used for input signals with a dominant frequency component, whereas the \( L_2 \) norm is more suitable for a random input signal. Scaling coefficients can be implemented by simple shift operations provided they satisfy the overflow constraints.
+    </p>
+    <p>
+        For modular realizations, such as cascade or parallel realizations of digital filters, optimum scaling is accomplished by applying one scaling multiplier per section.
+    </p>
+    <p>
+        As an illustration, the equation to compute the scaling factor for the cascade realization with direct-form second-order sections is presented as follows:
+    </p>
+    <p class="equation">
+        \( \lambda_i = \frac{1}{\|\prod_{j=1}^{i-1} H_j(z) F_i(z)\|_p}, \)
+    </p>
+    <p>
+        where:
+    </p>
+    <p class="equation">
+        \( F_i(z) = \frac{1}{z^2 + m_{1i}z + m_{2i}}. \)
+    </p>
+    <p>
+        The noise power spectral density is computed as:
+    </p>
+    <p class="equation">
+        \( P_y(z) = \sigma_e^2 \left[3 + 3\lambda_1^2 \prod_{i=1}^{m} H_i(z)H_i(z^{-1}) + 5 \sum_{j=2}^{m} \lambda_j^2 \prod_{i=j}^{m} H_i(z)H_i(z^{-1}) \right], \)
+    </p>
+    <p>
+        whereas the output noise variance is given by:
+    </p>
+    <p class="equation">
+        \( \sigma_o^2 = \sigma_e^2 \left[3 + 3\lambda_1^2 \|\prod_{i=1}^{m} H_i(e^{j\omega})\|_2^2 + 5 \sum_{j=2}^{m} \lambda_j^2 \|\prod_{i=j}^{m} H_i(e^{j\omega})\|_2^2 \right]. \)
+    </p>
+    <p>
+        As a design rule, the pairing of poles and zeros is performed as follows: poles closer to the unit circle pair with closer zeros to themselves, minimizing \( \|H_i(z)\|_p \) for \( p = 2 \) or \( p = \infty \).
+    </p>
+    <p>
+        For ordering, we define the following:
+    </p>
+    <p class="equation">
+        \( P_i = \frac{\|H_i(z)\|_{\infty}}{\|H_i(z)\|_2}. \)
+    </p>
+    <p>
+        For \( L_2 \) scaling, we order the section such that \( P_i \) is decreasing. For \( L_{\infty} \) scaling, \( P_i \) should be increasing.
+    </p>
+
+    <h3>2.11.4 Granularity Limit Cycles</h3>
+    <p>
+        Granularity limit cycles occur in digital filters when the quantization step size is too large, leading to a situation where the output oscillates between a small number of discrete values. This is typically seen in recursive digital filters where the feedback loop amplifies the quantization error. Granularity limit cycles can cause severe distortion in the output signal and are generally undesirable. They can be minimized by reducing the quantization step size or by using dithering techniques, which add a small amount of noise to the signal before quantization to decorrelate the quantization error from the signal.
+    </p>
+</div>
 
 
         <div class="box" id="querying">
